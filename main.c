@@ -54,8 +54,13 @@ void print_ctzn_rec(struct citizens ctzns[], int i)
 
 void print_vc_rec(struct vaccine_centers vc[], int i)
 {
-	int j = 0;
-	printf("Address: %s\ncenter_id: %d\ncenter_type: %s\ndistrict: %s\npin code: %d\n", vc[i].center_address, vc[i].center_id, vc[i].center_type, vc[i].district, vc[i].pin_code);
+	int j = 0,k=0;
+	while(vc[i].center_address[k]!='\0')
+	{
+		printf("%c",vc[i].center_address[k]);
+		k++;
+	}
+	printf("\ncenter_id: %d\ncenter_type: %s\ndistrict: %s\npin code: %d\n", vc[i].center_id, vc[i].center_type, vc[i].district, vc[i].pin_code);
 
 	while (vc[i].vacc_type[j][0] != '\0' && j < 6)
 	{
@@ -331,7 +336,9 @@ int addNewCenter(struct vaccine_centers vc[])
 	scanf("%s", cent_type);
 	printf("enter address: \n");
 	char address[50];
-	scanf("%s", address);
+	//scanf("%s", address);
+	getchar();
+	gets(address);
 	printf("enter district: \n");
 	char district[15];
 	scanf("%s", district);
