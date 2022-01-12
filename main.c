@@ -87,7 +87,7 @@ void sortBeneficiaryid(struct citizens ctzn[],int l,int r)
 		int i=0,j=0,k=l;
 		while(i<i1 && j<i2)
 		{
-			if(a[i].beneficiary_id<b[i].beneficiary_id)
+			if(a[i].beneficiary_id<b[j].beneficiary_id)
 			{
 				ctzn[k]=a[i];
 				i++;
