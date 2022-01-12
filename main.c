@@ -5,6 +5,7 @@
 #define ctzns_tot 100
 #define vc_tot 100
 #define curr_year 2021
+
 struct citizens
 {
 	int beneficiary_id;
