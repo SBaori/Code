@@ -43,6 +43,8 @@ struct time* initialize_time(int first_hour_start,int last_hour_start)
 	{
 		t=malloc(sizeof(struct time));
 		t->next=NULL;
+		t->allot_node=NULL;
+		t->tot_persons=0;
 		if(head == NULL)
 		{
 			
