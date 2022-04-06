@@ -22,7 +22,7 @@ struct member
 	char name[50];
 	char gender[7];
 	char enroll_prog[4][15];
-	int alot, slot_hr,happy;
+	int alot, slot_hr, happy;
 	struct member *next;
 };
 struct allots
@@ -257,9 +257,10 @@ void Print_trainer_list(struct trainer *head)
 			printf("Program %d: ", i + 1);
 			fputs(head->programs[i], stdout);
 			printf(", Remuneration: %d\n", head->remun[i]);
-			printf("Total remuneration earned today: %d\n",head->tot_remun);
+
 			i++;
 		}
+		printf("Total remuneration earned today: %d\n", head->tot_remun);
 		head = head->next;
 		printf("\n");
 	}
@@ -651,20 +652,20 @@ struct trainer *Add_trainer(struct trainer *t_head, struct available_trainer_ptr
 					{
 						train_tail_ptr->next = t_ptr;
 					}
-					t->tot_remun = 0;
-					t->next = NULL;
-					Print_trainer_list(t);
-					if (input_head == NULL)
-					{
-						input_head = t;
-					}
-
-					else
-					{
-						input_tail->next = t;
-					}
-					input_tail = t;
 				}
+				t->tot_remun = 0;
+				t->next = NULL;
+				Print_trainer_list(t);
+				if (input_head == NULL)
+				{
+					input_head = t;
+				}
+
+				else
+				{
+					input_tail->next = t;
+				}
+				input_tail = t;
 			}
 			flag = 1;
 		}
@@ -674,7 +675,7 @@ struct trainer *Add_trainer(struct trainer *t_head, struct available_trainer_ptr
 	printf("---------------Trainers added successfully!----------\n\n");
 	return t_head;
 }
-struct trainer *delete_trainer(struct trainer *head)
+struct trainer *delete_trainer(struct trainer *head, struct available_trainer_ptr **available_head, struct time **time_head)
 {
 	int trainer_id = 1;
 	struct trainer *ahead, *temp = head;
@@ -711,7 +712,7 @@ struct trainer *delete_trainer(struct trainer *head)
 struct member *Add_member(struct member *m_head)
 {
 	char name[50];
-	
+
 	int flag = 1;
 	struct member *inp_head = NULL, *tail;
 
@@ -740,13 +741,13 @@ struct member *Add_member(struct member *m_head)
 			char gender[7];
 			gets(gender);
 
-			printf("\n\n------Enter Programs to enroll! (enter x when done)-----\n\n");
+			printf("\n\n------Enter Programs to enroll! (enter x when done)-----\n");
 			char enroll_inp[15] = {0};
 			int i = 0;
 			int comp = strcmp(enroll_inp, "x");
 			while (comp && (i < 4))
 			{
-				printf("Enter program %d: \n",i+1);
+				printf("Enter program %d: \n", i + 1);
 				gets(enroll_inp);
 				comp = strcmp(enroll_inp, "x");
 				if (comp)
@@ -861,7 +862,7 @@ void schedule_slot(struct member *m_head, struct time *h_head, struct available_
 	while (member_id)
 	{
 
-		printf("Enter member ID: (enter 0 to exit)");
+		printf("Enter member ID: (enter 0 to exit)\n");
 		scanf("%d", &member_id);
 		getchar();
 		if (member_id)
@@ -912,7 +913,7 @@ void schedule_slot(struct member *m_head, struct time *h_head, struct available_
 						j++;
 					if ((j == 4) || (member_temp->enroll_prog[j][0] == '\0'))
 					{
-						printf("Program not enrolled!\n\n");
+						printf("Program not enrolled in by the member, slot booking failed!\n\n");
 					}
 					else
 					{
@@ -925,8 +926,8 @@ void schedule_slot(struct member *m_head, struct time *h_head, struct available_
 
 							start_hour++;
 						}
-						struct available_trainer_ptr *trainer_temp = available_head, *other_matching_trainer = NULL,*found_trainer=NULL;
-						struct allots *allot_time_temp = time_temp->allot_node, *other_matching_allot,*found_trainer_allot;
+						struct available_trainer_ptr *trainer_temp = available_head, *other_matching_trainer = NULL, *found_trainer = NULL;
+						struct allots *allot_time_temp = time_temp->allot_node, *other_matching_allot, *found_trainer_allot;
 						if (time_temp->tot_persons == 10)
 							printf("Total members exceeding the limit given in covid guidline! Choose different time slot\n\n");
 						else
@@ -936,13 +937,13 @@ void schedule_slot(struct member *m_head, struct time *h_head, struct available_
 
 								if (match_trainer_member_progs(progs, trainer_temp) != -1)
 								{
-									if(trainer_temp->ptr->trainer_id==trainer_id)
+									if (trainer_temp->ptr->trainer_id == trainer_id)
 									{
-										found_trainer=trainer_temp;
-										found_trainer_allot=allot_time_temp;
-										//f=0;
+										found_trainer = trainer_temp;
+										found_trainer_allot = allot_time_temp;
+										// f=0;
 									}
-									else if (allot_time_temp->m_ptr==NULL)
+									else if (allot_time_temp->m_ptr == NULL)
 									{
 										other_matching_trainer = trainer_temp;
 										other_matching_allot = allot_time_temp;
@@ -953,11 +954,12 @@ void schedule_slot(struct member *m_head, struct time *h_head, struct available_
 								allot_time_temp = allot_time_temp->next;
 							}
 							if (found_trainer == NULL)
-								printf("Trainer does not exit or does not specialise in the entered program!\n\n");
+								printf("Trainer does not exist or does not specialise in the entered program!\n\n");
 							// else if (match_trainer_member_progs(progs, trainer_temp) == -1)
 							// 	printf("Trainer does not specialise in the given program\n\n");
 							else
 							{
+								int found = 1, found_other = 0;
 								if (found_trainer_allot->m_ptr != NULL)
 								{
 									printf("-----Trainer not free-----\n");
@@ -967,15 +969,15 @@ void schedule_slot(struct member *m_head, struct time *h_head, struct available_
 										other_matching_allot->m_ptr = member_temp;
 										time_temp->tot_persons++;
 										printf("Slot booked for the member ");
-										fputs(member_temp->name,stdout);
-										printf("from %d:00-%d:00 with trainer ",start_hour,start_hour+1);
-										fputs(other_matching_trainer->ptr->name,stdout);
+										fputs(member_temp->name, stdout);
+										printf(" from %d:00-%d:00 with trainer ", start_hour, start_hour + 1);
+										fputs(other_matching_trainer->ptr->name, stdout);
 										printf("\n");
 										other_matching_trainer->ptr->tot_remun += other_matching_trainer->ptr->remun[match_trainer_member_progs(progs, other_matching_trainer)];
 										// printf("---------%d:%d--------\n",other_matching_trainer->tot_remun,match_trainer_member_progs(progs,other_matching_trainer));
 										member_temp->alot = 1;
 										member_temp->slot_hr = start_hour;
-										member_temp->happy=0;
+										member_temp->happy = 0;
 									}
 									else
 									{
@@ -1007,97 +1009,98 @@ void schedule_slot(struct member *m_head, struct time *h_head, struct available_
 										// 	// printf("---------%d:%d--------\n",other_matching_trainer->tot_remun,match_trainer_member_progs(progs,other_matching_trainer));
 										// 	member_temp->alot = 1;
 										// }
-										//else
+										// else
 										//{
-											time_temp = time_temp->next;
-											start_hour++;
-											int found = 0;
-											while (!found && (time_temp != NULL))
+										printf("No trainers free for the entered program in the given slot, checking for slots ahead!\n\n");
+										time_temp = time_temp->next;
+										start_hour++;
+										found = 0;
+										while (!(found || found_other) && (time_temp != NULL))
+										{
+											allot_time_temp = time_temp->allot_node;
+											other_matching_trainer = NULL;
+											trainer_temp = available_head;
+											found_trainer = NULL;
+											while ((trainer_temp != NULL) && (!found))
 											{
-												allot_time_temp = time_temp->allot_node;
-												other_matching_trainer = NULL;
-												trainer_temp = available_head;
-												found_trainer=NULL;
-												while ((trainer_temp != NULL) && (!found))
+												if (match_trainer_member_progs(progs, trainer_temp) != -1)
 												{
-													if (match_trainer_member_progs(progs, trainer_temp) != -1)
+													if (trainer_temp->ptr->trainer_id == trainer_id && allot_time_temp->m_ptr == NULL)
 													{
-														if(trainer_temp->ptr->trainer_id==trainer_id && allot_time_temp->m_ptr==NULL)
-														{
-															found_trainer=trainer_temp;
-															found_trainer_allot=allot_time_temp;
-															found=1;
-														}
-														else if (allot_time_temp->m_ptr == NULL)
-														{
-															other_matching_trainer = trainer_temp;
-															other_matching_allot = allot_time_temp;
-														}
+														found_trainer = trainer_temp;
+														found_trainer_allot = allot_time_temp;
+														found = 1;
 													}
-													trainer_temp = trainer_temp->next;
-													allot_time_temp = allot_time_temp->next;
+													else if (allot_time_temp->m_ptr == NULL)
+													{
+														other_matching_trainer = trainer_temp;
+														other_matching_allot = allot_time_temp;
+													}
 												}
-												if (found_trainer != NULL)
-												{
+												trainer_temp = trainer_temp->next;
+												allot_time_temp = allot_time_temp->next;
+											}
+											// if (found_trainer != NULL)
+											// {
 
-													found_trainer_allot->m_ptr = member_temp;
-													time_temp->tot_persons++;
-													// printf("Slot booked for the member ID %s for the time %d-%d\nwith trainer ID %d\n\n", member_temp->name, start_hour, start_hour + 1, trainer_temp->ptr->trainer_id);
-													printf("Slot booked for the member ");
-													fputs(member_temp->name,stdout);
-													printf("from %d:00-%d:00 with trainer ",start_hour,start_hour+1);
-													fputs(found_trainer->ptr->name,stdout);
-													printf("\n");
-													member_temp->alot = 1;
-													found_trainer->ptr->tot_remun += found_trainer->ptr->remun[match_trainer_member_progs(progs, found_trainer)];
-													// printf("---------%d:%d--------",trainer_temp->tot_remun,match_trainer_member_progs(progs,trainer_temp));
-													//found = 1;
-													member_temp->slot_hr = start_hour;
-													member_temp->happy=1;
-												}
-												else if (other_matching_trainer != NULL)
-												{
-													other_matching_allot->m_ptr = member_temp;
-													time_temp->tot_persons++;
-													// printf("Slot booked for the member ID %s for the time %d-%d\nwith trainer ID: %d\n\n", member_temp->name, start_hour, start_hour + 1, trainer_temp->ptr->trainer_id);
-													printf("Slot booked for the member ");
-													fputs(member_temp->name,stdout);
-													printf("from %d:00-%d:00 with trainer ",start_hour,start_hour+1);
-													fputs(other_matching_trainer->ptr->name,stdout);
-													printf("\n");
-													member_temp->alot = 1;
-													other_matching_trainer->ptr->tot_remun += other_matching_trainer->ptr->remun[match_trainer_member_progs(progs, other_matching_trainer)];
-													// printf("---------%d:%d--------",other_matching_trainer->tot_remun,match_trainer_member_progs(progs,other_matching_trainer));
-													found = 1;
-													member_temp->slot_hr = start_hour;
-													member_temp->happy=0;
-												}
-												else
-													time_temp = time_temp->next;
-											}
-											if (time_temp == NULL)
+											// 	found_trainer_allot->m_ptr = member_temp;
+											// 	time_temp->tot_persons++;
+											// 	// printf("Slot booked for the member ID %s for the time %d-%d\nwith trainer ID %d\n\n", member_temp->name, start_hour, start_hour + 1, trainer_temp->ptr->trainer_id);
+											// 	printf("Slot booked for the member ");
+											// 	fputs(member_temp->name,stdout);
+											// 	printf("from %d:00-%d:00 with trainer ",start_hour,start_hour+1);
+											// 	fputs(found_trainer->ptr->name,stdout);
+											// 	printf("\n");
+											// 	member_temp->alot = 1;
+											// 	found_trainer->ptr->tot_remun += found_trainer->ptr->remun[match_trainer_member_progs(progs, found_trainer)];
+											// 	// printf("---------%d:%d--------",trainer_temp->tot_remun,match_trainer_member_progs(progs,trainer_temp));
+											// 	//found = 1;
+											// 	member_temp->slot_hr = start_hour;
+											// 	member_temp->happy=1;
+											// }
+											if ((!found) && other_matching_trainer != NULL)
 											{
-												printf("No available slots today!\n Slot booked for the same preffered time for the next day!\n");
+												other_matching_allot->m_ptr = member_temp;
+												time_temp->tot_persons++;
+												// printf("Slot booked for the member ID %s for the time %d-%d\nwith trainer ID: %d\n\n", member_temp->name, start_hour, start_hour + 1, trainer_temp->ptr->trainer_id);
+												printf("Slot booked for the member ");
+												fputs(member_temp->name, stdout);
+												printf(" from %d:00-%d:00 with trainer ", start_hour, start_hour + 1);
+												fputs(other_matching_trainer->ptr->name, stdout);
+												printf("\n");
+												member_temp->alot = 1;
+												other_matching_trainer->ptr->tot_remun += other_matching_trainer->ptr->remun[match_trainer_member_progs(progs, other_matching_trainer)];
+												// printf("---------%d:%d--------",other_matching_trainer->tot_remun,match_trainer_member_progs(progs,other_matching_trainer));
+												found_other = 1;
+												member_temp->slot_hr = start_hour;
+												member_temp->happy = 0;
 											}
+											else
+												time_temp = time_temp->next;
+										}
+										if (time_temp == NULL)
+										{
+											printf("No slots available today!\n Slot booked for the same preffered time for the next working day!\nMember can book for any other enrolled program today given the slots are free\n");
+										}
 										//}
 									}
 								}
-								else
+								if (found && !found_other)
 								{
 
 									found_trainer_allot->m_ptr = member_temp;
 									time_temp->tot_persons++;
 									// printf("Slot booked for the member ID %s for the time %d-%d\nwith trainer ID: %d\n\n", member_temp->name, slot_hour, slot_hour + 1, trainer_temp->ptr->trainer_id);
 									printf("Slot booked for the member ");
-									fputs(member_temp->name,stdout);
-									printf("from %d:00-%d:00 with trainer ",start_hour,start_hour+1);
-									fputs(found_trainer->ptr->name,stdout);
+									fputs(member_temp->name, stdout);
+									printf(" from %d:00-%d:00 with trainer ", start_hour, start_hour + 1);
+									fputs(found_trainer->ptr->name, stdout);
 									printf("\n");
 									found_trainer->ptr->tot_remun += found_trainer->ptr->remun[match_trainer_member_progs(progs, found_trainer)];
 									// printf("---------%d:%d--------",trainer_temp->tot_remun,match_trainer_member_progs(progs,trainer_temp));
 									member_temp->alot = 1;
 									member_temp->slot_hr = start_hour;
-									member_temp->happy=1;
+									member_temp->happy = 1;
 								}
 							}
 						}
@@ -1113,25 +1116,14 @@ void print_sorted_remuneration_list(struct trainer *t_head)
 	Print_trainer_list(t_head);
 	t_head = mergesort((void *)t_head, 1, 0);
 }
-void print_intersection_list(struct time *time_head)
+void print_intersection_list(struct member *m_head)
 {
-	while (time_head != NULL)
+	struct member *temp = m_head;
+	while (m_head != NULL)
 	{
-		if (time_head->tot_persons > 0)
+		if (m_head->alot == 1 && m_head->happy == 1)
 		{
-			while (time_head->allot_node != NULL)
-			{
-				if (time_head->allot_node->m_ptr != NULL && time_head->allot_node->happy == 1)
-				{
-					struct member *store_next = time_head->allot_node->m_ptr->next;
-					time_head->allot_node->m_ptr->next = NULL;
-					Print_member_list(time_head->allot_node->m_ptr);
-					time_head->allot_node->m_ptr->next = store_next;
-				}
-				time_head->allot_node = time_head->allot_node->next;
-			}
 		}
-		time_head = time_head->next;
 	}
 }
 void print_hour_wise_list(struct time *time_head, struct available_trainer_ptr *available_head)
@@ -1162,11 +1154,51 @@ void print_hour_wise_list(struct time *time_head, struct available_trainer_ptr *
 int main()
 {
 	struct available_trainer_ptr *available_head = NULL;
-	struct trainer *t_head = Add_trainer(NULL, &available_head);
+	struct member *m_head = NULL;
+	struct trainer *t_head = NULL;
+	struct time *time_head = NULL;
+	int key = 1;
+	printf("Enter the key for the corresponding operations!\n");
+	while (key)
+	{
+		printf("1. Add Member\n2. Delete Member\n3. Add Trainer\n4. Delete Trainer\n5. Print Members\n6. Print Trainers\n7. Schedule Slot\n8. Print Trainers Remuneration wise\n9. Print Intersection List\n10. Print Hour Wise List\n0. To exit\n");
+		scanf("%d", &key);
+		getchar();
+		if (key == 1)
+			m_head = Add_member(m_head);
+		else if (key == 2)
+			m_head = delete_member(m_head);
+		else if (key == 3)
+		{
+			t_head = Add_trainer(t_head, &available_head);
+			time_head = initialize_time(6, 12 + 8, available_head);
+		}
+		else if (key == 4)
+			t_head = delete_trainer(t_head, &available_head, &time_head);
+		else if (key == 5)
+			Print_member_list(m_head);
+		else if (key == 6)
+			Print_trainer_list(t_head);
+		else if (key == 7)
+		{
+			if (available_head != NULL)
+				schedule_slot(m_head, time_head, available_head);
+			else
+				printf("No free trainers present!\n");
+		}
+
+		else if (key == 8)
+			print_sorted_remuneration_list(t_head);
+		else if (key == 9)
+			print_intersection_list(m_head);
+		else if (key == 10)
+			print_hour_wise_list(time_head, available_head);
+	}
+	// struct trainer *t_head = Add_trainer(NULL, &available_head);
 
 	// struct trainer *available_head = available_trainers(t_head);
 	//  Print_trainer_list(available_head);
-	struct time *time_head = initialize_time(6, 12 + 8, available_head);
+
 	// while(time_head!=NULL)
 	// {
 	// 	printf("")
@@ -1178,14 +1210,14 @@ int main()
 
 	// 	time_head=time_head->next;
 	// }
-	struct member *m_head = Add_member(NULL);
-	// while(time_head)
-	//  printf("-----------SECOND TIME-------\n");
-	//  head = Add_member(head);
-	//  search_member(head);
-	schedule_slot(m_head, time_head, available_head);
+	// struct member *m_head = Add_member(NULL);
+	// // while(time_head)
+	// //  printf("-----------SECOND TIME-------\n");
+	// //  head = Add_member(head);
+	// //  search_member(head);
+	// schedule_slot(m_head, time_head, available_head);
 
-	print_sorted_remuneration_list(t_head);
-	print_intersection_list(time_head);
+	// print_sorted_remuneration_list(t_head);
+	// print_intersection_list(time_head);
 	return 0;
 }
