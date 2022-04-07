@@ -57,7 +57,7 @@ struct member_allot_request
 	char request_prog[15];
 	struct member_allot_request *next;
 };
-struct time *initialize_time(int first_hour_start, int last_hour_start, struct available_trainer_ptr *available_head)
+struct time *initialize_time(int first_hour_start, int last_hour_start)
 {
 	struct time *head = NULL, *t, *tail;
 	struct available_trainer_ptr *temp;
@@ -68,23 +68,23 @@ struct time *initialize_time(int first_hour_start, int last_hour_start, struct a
 		t->next = NULL;
 		t->allot_node = NULL;
 
-		temp = available_head;
-		while ((temp != NULL))
-		{
-			t_allots = malloc(sizeof(struct allots));
-			t_allots->m_ptr = NULL;
-			if (t->allot_node == NULL)
-			{
-				t->allot_node = t_allots;
-			}
-			else
-			{
-				tail_allots->next = t_allots;
-			}
+		// temp = available_head;
+		// while ((temp != NULL))
+		// {
+		// 	t_allots = malloc(sizeof(struct allots));
+		// 	t_allots->m_ptr = NULL;
+		// 	if (t->allot_node == NULL)
+		// 	{
+		// 		t->allot_node = t_allots;
+		// 	}
+		// 	else
+		// 	{
+		// 		tail_allots->next = t_allots;
+		// 	}
 
-			tail_allots = t_allots;
-			temp = temp->next;
-		}
+		// 	tail_allots = t_allots;
+		// 	temp = temp->next;
+		// }
 		t->tot_persons = 0;
 		if (head == NULL)
 		{
@@ -100,7 +100,42 @@ struct time *initialize_time(int first_hour_start, int last_hour_start, struct a
 	}
 	return head;
 }
+void add_trainer_slots(struct time* time_head,struct available_trainer_ptr* available_head)
+{
+	struct allots* allot_node,*allot_node_tail,*t;
+	struct available_trainer_ptr* temp;
+	while(time_head!=NULL)
+	{
+		allot_node=time_head->allot_node;
+		temp = available_head;
+		while(temp!=NULL)
+		{
+			if(time_head->allot_node==NULL)
+			{
+				t = malloc(sizeof(struct allots));
+				t->m_ptr=NULL;
+				t->next=NULL;
+				time_head->allot_node=t;
+				allot_node=t;
+			}
+			else
+			{
+				if((allot_node->next==NULL) && (temp->next!=NULL))
+				{
+					t = malloc(sizeof(struct allots));
+					t->m_ptr=NULL;
+					t->next=NULL;
+					allot_node->next=t;
+				}
+				allot_node=allot_node->next;
+				temp=temp->next;
+			}
+			
 
+		}
+		time_head=time_head->next;
+	}
+}
 void *sortedMerge(void *a, void *b, int flag, int flag2)
 {
 	void *res;
@@ -654,7 +689,7 @@ void search_member(struct member *head)
 	}
 }
 
-struct trainer *Add_trainer(struct trainer *t_head, struct available_trainer_ptr **avail_t_head)
+struct trainer *Add_trainer(struct trainer *t_head, struct available_trainer_ptr **avail_t_head,struct time* time_head)
 {
 	char name[50] = {0};
 	int name_comp, flag = 1;
@@ -742,6 +777,7 @@ struct trainer *Add_trainer(struct trainer *t_head, struct available_trainer_ptr
 					{
 						train_tail_ptr->next = t_ptr;
 					}
+					add_trainer_slots(time_head,(*avail_t_head));
 				}
 				t->available=available;
 				t->tot_remun = 0;
@@ -943,7 +979,7 @@ struct member *Add_member(struct member *m_head)
 void remove_member_bookings(struct member *member, struct time *time_head, struct available_trainer_ptr *available_head)
 {
 	int hr = member->slot_hr;
-	int start_hour = start_time;
+	int start_hour = 6;
 	while (start_hour < hr)
 	{
 		start_hour++;
@@ -1115,7 +1151,7 @@ void schedule_slot(struct member *m_head, struct time *h_head, struct available_
 	struct member_allot_request* itr = allot_head;
 	while (allot_head != NULL)
 	{
-		int start_hour = start_time;
+		int start_hour = 6;
 		struct time *time_temp = h_head;
 
 		while (start_hour < allot_head->slot_hr)
@@ -1173,9 +1209,9 @@ void schedule_slot(struct member *m_head, struct time *h_head, struct available_
 						fputs(allot_head->m_ptr->name, stdout);
 						printf(" from %d:00-%d:00 with trainer ", start_hour, start_hour + 1);
 						fputs(other_matching_trainer->ptr->name, stdout);
-						printf("\n");
+						printf("\n\n");
 						other_matching_trainer->ptr->tot_remun += other_matching_trainer->ptr->remun[match_trainer_member_progs(allot_head->request_prog, other_matching_trainer)];
-						
+						found_other=1;
 						allot_head->m_ptr->alot = 1;
 						allot_head->m_ptr->slot_hr = start_hour;
 						allot_head->m_ptr->happy = 0;
@@ -1184,12 +1220,13 @@ void schedule_slot(struct member *m_head, struct time *h_head, struct available_
 					}
 					else
 					{
-						printf("No trainers free for the entered program in the given slot, checking for slots ahead!\n\n");
+						printf("No trainers free for the entered program in the given slot, checking for slots ahead of given time!\n");
 						time_temp = time_temp->next;
-						start_hour++;
+						
 						found = 0;
 						while (!(found || found_other) && (time_temp != NULL))
 						{
+							start_hour++;
 							allot_time_temp = time_temp->allot_node;
 							other_matching_trainer = NULL;
 							trainer_temp = available_head;
@@ -1222,7 +1259,7 @@ void schedule_slot(struct member *m_head, struct time *h_head, struct available_
 								fputs(allot_head->m_ptr->name, stdout);
 								printf(" from %d:00-%d:00 with trainer ", start_hour, start_hour + 1);
 								fputs(other_matching_trainer->ptr->name, stdout);
-								printf("\n");
+								printf("\n\n");
 								allot_head->m_ptr->alot = 1;
 								other_matching_trainer->ptr->tot_remun += other_matching_trainer->ptr->remun[match_trainer_member_progs(allot_head->request_prog, other_matching_trainer)];
 								
@@ -1251,10 +1288,10 @@ void schedule_slot(struct member *m_head, struct time *h_head, struct available_
 					found_trainer_allot->m_ptr = allot_head->m_ptr;
 					time_temp->tot_persons++;
 					printf("Slot booked for the member ");
-					fputs(member_temp->name, stdout);
+					fputs(allot_head->m_ptr->name, stdout);
 					printf(" from %d:00-%d:00 with trainer ", start_hour, start_hour + 1);
 					fputs(found_trainer->ptr->name, stdout);
-					printf("\n");
+					printf("\n\n");
 					found_trainer->ptr->tot_remun += found_trainer->ptr->remun[match_trainer_member_progs(allot_head->request_prog, found_trainer)];
 					allot_head->m_ptr->alot = 1;
 					allot_head->m_ptr->slot_hr = start_hour;
@@ -1295,52 +1332,37 @@ void print_intersection_list(struct member *m_head)
 void print_hour_wise_list(struct time *time_head, struct available_trainer_ptr *available_head)
 {
 	struct allots *allot_node;
-	struct available_trainer_ptr *temp;
-	// while (time_head != NULL)
-	// {
-	// 	temp = available_head;
-	// 	allot_node = time_head->allot_node;
-	// 	while (allot_node != NULL)
-	// 	{
-	// 		if (allot_node->m_ptr != NULL)
-	// 		{
-	// 			printf("Member Name :");
-	// 			fputs(allot_node->m_ptr->name, stdout);
-	// 			printf("Member ID: %d\n", allot_node->m_ptr->member_id);
-	// 			printf("-----\nTrainer Name: ");
-	// 			fputs(temp->ptr->name, stdout);
-	// 			printf("Trainer ID: %d\n", temp->ptr->trainer_id);
-	// 		}
-	// 		temp = temp->next;
-	// 		allot_node = allot_node->next;
-	// 	}
-	// 	time_head = time_head->next;
-	// }
-	int progs[4][15] = {"Yoga","Zumba","Cardio","Weigth Lifting"};
+	struct time *time_itr;
+	struct available_trainer_ptr* temp;
+	char progs[4][15] = {"Yoga","Zumba","Cardio","Weigth Lifting"};
 	int i=0;
 	while(i<4)
 	{
 		printf("\n---");
 		fputs(progs[i],stdout);
 		printf("---\n");
-		while(time_head!=NULL)
+		time_itr = time_head;
+		while(time_itr!=NULL)
 		{
-			allot_node=time_head->allot_node;
+			allot_node=time_itr->allot_node;
 			temp = available_head;
 			while(allot_node!=NULL)
 			{
-				if(allot_node->m_ptr!=NULL && strcmpi(allot_node->m_ptr->booked_prog,progs[i]))
+				if(allot_node->m_ptr!=NULL && !strcmpi(allot_node->m_ptr->booked_prog,progs[i]))
 				{
+
 					printf("Member ");
 					fputs(allot_node->m_ptr->name,stdout);
 					printf(" - Trainer ");
 					fputs(temp->ptr->name,stdout);
 					printf("\n");
+					printf("Time Slot: %d:00-%d:00",allot_node->m_ptr->slot_hr,allot_node->m_ptr->slot_hr+1);
+					printf("\n");
 				}
 				allot_node=allot_node->next;
 				temp=temp->next;
 			}
-			time_head=time_head->next;
+			time_itr=time_itr->next;
 		}
 		i++;
 	}
@@ -1348,12 +1370,12 @@ void print_hour_wise_list(struct time *time_head, struct available_trainer_ptr *
 }
 int main()
 {
-	struct available_trainer_ptr *available_head = NULL;
+	struct available_trainer_ptr *available_head = NULL,*temp;
 	struct member *m_head = NULL;
 	struct trainer *t_head = NULL;
 	struct time *time_head = NULL;
 	int key = 1;
-	// m_head = mergesort((void*)m_head,0,0);
+	time_head = initialize_time(6, 20);
 	printf("\nEnter the key for the corresponding operations!\n");
 	while (key)
 	{
@@ -1368,12 +1390,13 @@ int main()
 				m_head = delete_member(m_head, time_head, available_head);
 			else
 				printf("No members present!\n");
+
 		}
 
 		else if (key == 3)
 		{
-			t_head = Add_trainer(t_head, &available_head);
-			time_head = initialize_time(start_time, 12 + end_time, available_head);
+			t_head = Add_trainer(t_head, &available_head,time_head);
+			
 		}
 		else if (key == 4)
 		{
