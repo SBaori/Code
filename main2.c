@@ -1,222 +1,297 @@
 #include <stdio.h>
-#define heap_ptr_size 52
-#define header_size 2
+#include <stdlib.h>
+#define heap_ptr_size 500
+//#define header_size 2
 #define null -2
-int heap_ptr[heap_ptr_size]; //heap
-int free_list_start=0;       // start pointer of the free list (points at the start of the memory by default).
+char heap_ptr[heap_ptr_size]; // heap
+							  //  start pointer of the free list (points at the start of the memory by default).
 
 // allocated blocks have the head pointer pointing to 0 by default.
 
+struct header
+{
+	short int size;
+	void *h_ptr;
+	char ref_count;
+	char alloc;
+	struct header *next;
+	struct header *next_free;
+};
+
+struct allocs
+{
+	char tag;
+	char* ptr[3];
+};
+int header_size = sizeof(struct header);
+struct header *free_list_start;
+struct header *first_head;
 
 // initialize the memory(heap)
-void initialize_mem(int ptr,int size,int next_ptr)
+void initialize_mem(int size, int next_ptr, struct header *head)
 {
-	for(int i=ptr+header_size;i<ptr+size;i++)
-		heap_ptr[i]=-1;
-	if(size && next_ptr)
+	if (size && next_ptr)
 	{
-		heap_ptr[ptr]=size;
-		heap_ptr[ptr+1]=next_ptr;
+		head->size = size;
+		head->ref_count = 0;
+		head->next = NULL;
+		head->next_free = NULL;
+		head->h_ptr = heap_ptr;
+		head->alloc = 0;
 	}
 }
 
-int update_offsets_alloc(int addr_curr,int addr_prev,int size)
+struct header *update_offsets_alloc(struct header *addr_curr, struct header *addr_prev, short int size, struct header *head_prev)
 {
-    // if we have found a block of exact size
-	if(heap_ptr[addr_curr] == size)
+	struct header *alloced;
+	// if we have found a block of exact size
+	if (addr_curr->size == size)
 	{
-        // if this block comes before the start of free list, then update the start free list pointer.
-		if(addr_prev==-1)
-			free_list_start= heap_ptr[addr_curr+1];
-        // otherwise, change the pointer of previous free block to point to next to next free block.
+		// if this block comes before the start of free list, then update the start free list pointer.
+		if (addr_prev == NULL)
+			free_list_start = addr_curr->next_free;
+		// otherwise, change the pointer of previous free block to point to next to next free block.
 		else
-			heap_ptr[addr_prev+1] = heap_ptr[addr_curr+1];
-        // mark the block as allocated.
-		heap_ptr[addr_curr+1]=0;
+			addr_prev->next_free = addr_curr->next_free;
+		// mark the block as allocated.
+		addr_curr->alloc = 1;
+		addr_curr->next_free = NULL;
+		alloced = addr_curr;
 	}
 	else
 	{
-		int orig_size = heap_ptr[addr_curr];
-		int orig_ptr = heap_ptr[addr_curr+1];
+		alloced = malloc(sizeof(struct header));
+		alloced->size = size;
+		alloced->h_ptr = addr_curr->h_ptr;
+		// head_prev->next=alloced;
+		alloced->next = addr_curr;
 
-		heap_ptr[addr_curr]=size;
-		heap_ptr[addr_curr+1] = 0;
-
-		// change current pointer to the next remaining block.
-		addr_curr+=size;
-
-		// update free list pointer if current pointer is equal to it.
-		if(free_list_start == (addr_curr-size))
-			free_list_start+=size;
-		// if current pointer and free list pointer are not equal, then there is a previous address. change it to point to new free block.
+		addr_curr->size = addr_curr->size - size;
+		addr_curr->h_ptr = addr_curr->h_ptr + alloced->size;
+		if (head_prev == NULL)
+			first_head = alloced;
 		else
-			heap_ptr[addr_prev+1] = addr_curr;
-
-		heap_ptr[addr_curr] = orig_size-size;
-		heap_ptr[addr_curr+1] = orig_ptr;
-		/*if(addr_prev!=-1)
-			heap_ptr[addr_prev+1] = addr_curr;*/
-		addr_curr-=size;
-
+			head_prev->next = alloced;
+		alloced->alloc = 1;
+		alloced->next_free = NULL;
 	}
-	return addr_curr;
+	return alloced;
 }
 
 // merge the block if possible and add to the free list.
-void merge(int prev_ptr,int next_ptr,int ptr)
+void merge(struct header *prev_ptr, struct header *next_ptr, struct header *target_block)
 {
 
-    /* Here we are first merging the current block to the next free block(or adding to the free list) then we merge(or add) the newly added (or merged)
-       block with the previous free block
+	/* Here we are first merging the current block to the next free block(or adding to the free list) then we merge(or add) the newly added (or merged)
+	   block with the previous free block
 
-    */
-    // head pointer of current block will need to be pointed to the next free block no matter what.
-	heap_ptr[ptr+1] = next_ptr;
+	*/
+	// head pointer of current block will need to be pointed to the next free block no matter what.
+	target_block->next_free = next_ptr;
+	target_block->alloc = 0;
+	// heap_ptr[ptr+1] = next_ptr;
 
-    // check if the nearest right free block is adjacent
-	if(ptr+heap_ptr[ptr] == next_ptr)
+	// check if the nearest right free block is adjacent
+	if (target_block->next == next_ptr)
 	{
-		heap_ptr[ptr] += heap_ptr[next_ptr];
-		heap_ptr[ptr+1] = heap_ptr[next_ptr+1];
+		target_block->size += next_ptr->size;
+		struct header *temp = target_block->next;
+		target_block->next = target_block->next->next;
+		target_block->next_free = next_ptr->next_free;
+		free(temp);
+		// heap_ptr[ptr] += heap_ptr[next_ptr];
+		// heap_ptr[ptr+1] = heap_ptr[next_ptr+1];
 	}
 
-    // if there is no previous free block, update the free list pointer to point to the current block
-	if(prev_ptr == null)
+	// if there is no previous free block, update the free list pointer to point to the current block
+	if (prev_ptr == NULL)
 	{
-		free_list_start = ptr;
+		free_list_start = target_block;
 	}
 	else
 	{
-		heap_ptr[prev_ptr+1] = ptr;
+		prev_ptr->next_free = target_block;
 
-		if(prev_ptr + heap_ptr[prev_ptr] == ptr)
+		if (prev_ptr->next == target_block)
 		{
-			heap_ptr[prev_ptr]+= heap_ptr[ptr];
-			heap_ptr[prev_ptr+1] = heap_ptr[ptr+1];
-            ptr = prev_ptr;
+			prev_ptr->size += target_block->size;
+			struct header *temp = prev_ptr->next;
+			prev_ptr->next = prev_ptr->next->next;
+			prev_ptr->next_free = target_block->next_free;
+			free(temp);
 		}
 	}
-	initialize_mem(ptr,heap_ptr[ptr],0);
 }
-void free_mem_alloc(int ptr)
+void free_mem_alloc(void *ptr)
 {
-    //change the address to point to the start of head.
-	ptr-=2;
-	int i=free_list_start,temp_ptr=ptr,prev_free_ptr=null,next_free_ptr=null;
-
-    // locate the nearest free blocks of the block to be freed.
-	while( i < ptr && i!=null)
+	// change the address to point to the start of head.
+	ptr -= header_size;
+	struct header *i = free_list_start, *prev_free_ptr = NULL, *next_free_ptr = NULL, *temp = first_head;
+	void *temp_ptr = ptr;
+	// locate the nearest free blocks of the block to be freed.
+	while (i->h_ptr < ptr)
 	{
 		prev_free_ptr = i;
-		i = heap_ptr[i+1];
+		i = i->next_free;
 	}
-	if( i == ptr )
+	if (i == ptr)
 		printf("Invalid pointer\n");
-	next_free_ptr=i;
-
-	merge(prev_free_ptr,next_free_ptr,ptr);
-
+	else
+	{
+		next_free_ptr = i;
+		while (temp != NULL && temp->h_ptr != ptr)
+		{
+			temp = temp->next;
+		}
+		merge(prev_free_ptr, next_free_ptr, temp);
+	}
 }
 
-int mem_alloc(int size)
+void *mem_alloc(short int size)
 {
 	// change requested size to include header size
-	size+=header_size;
-
-	int i=free_list_start,min_size_alloced=heap_ptr_size+1,addr_min=-3,addr_prev=-1;
-	int addr_min_prev=-1;
-	if(free_list_start!=null)
+	size += header_size;
+	struct header *i = free_list_start, *addr_min = NULL, *addr_min_prev = NULL, *addr_prev = NULL;
+	struct header *temp = first_head;
+	short int min_size_alloced = heap_ptr_size + 1;
+	if (free_list_start != NULL)
 	{
-        // find the smallest free block to be allocated for the request.
+		// find the smallest free block to be allocated for the request.
 		do
 		{
-			if(heap_ptr[(i)]>size)
+			if (i->size > size)
 			{
-				if(heap_ptr[(i)]<min_size_alloced)
+				if (i->size < min_size_alloced)
 				{
-					min_size_alloced = heap_ptr[i];
+					min_size_alloced = i->size;
 					addr_min_prev = addr_prev;
 					addr_min = i;
 				}
 			}
-			else if(heap_ptr[i] == size)
+			else if (i->size == size)
 			{
-				min_size_alloced = heap_ptr[i];
+				min_size_alloced = i->size;
 				addr_min_prev = addr_prev;
-				addr_min=i;
+				addr_min = i;
 				break;
 			}
-			addr_prev=i;
-			i = heap_ptr[i+1];
-		}while(i!=null);
-    //if we have found one, update the free list.
-    if(addr_min!=-3)
-		addr_min = update_offsets_alloc(addr_min,addr_min_prev,size);
-	}
-	return (addr_min+header_size);
-}
-
-void display_heap_layout()
-{
-	//int start = free_list_start;
-	int i=0,j=0;
-	do
-	{
-		if(heap_ptr[i] != -1)
+			addr_prev = i;
+			i = i->next_free;
+		} while (i != NULL);
+		// if we have found one, update the free list.
+		if (addr_min != NULL)
 		{
-			printf("|%d|",heap_ptr[i]);
-            //j=1;
+			if (temp->next == NULL)
+				temp = NULL;
+			else
+			{
+				while (temp != NULL && temp->next != addr_min)
+					temp = temp->next;
+			}
+			addr_min = update_offsets_alloc(addr_min, addr_min_prev, size, temp);
 		}
-		else
-        {
-            // printf("(%d)",j);
-            // j++;
-            printf("-");
-        }
-		i++;
-	}while(i<heap_ptr_size);
-	printf("\n");
+	}
+	void *addr = addr_min->h_ptr;
+	return (addr + header_size);
+}
+
+void populate_matrix(int adj_matrix[][11],char *root,struct allocs chunks[])
+{
+	char i=*root;
+	int k=0;
+	while(chunks[i].ptr[k]!=NULL)
+	{
+		adj_matrix[i][*(chunks[i].ptr[k])] = 1;
+		display_matrix(adj_matrix,chunks[i].ptr[k],chunks);
+		k++;
+	}
 
 }
-void display_matrix(int adj_matrix[][10])
-{
-	for(int i=0;i<10;i++)
-	{
-		for(int j=0;j<10;j++)
-			printf(" %d :(%d,%d)|",adj_matrix[i][j],i,j);
-		printf("\n");
-	}
-}
+
 int main()
 {
-	int adj_matrix[10][10];
-	int root_set[4];
-	int sim_struct_size[3] = {2,3,4};
-	initialize_mem(free_list_start,heap_ptr_size,null);
-     	int alloc[11];
-	alloc[5] = mem_alloc(sim_struct_size[0]);
-      	alloc[1] = mem_alloc(sim_struct_size[2]);
-	heap_ptr[alloc[5]+1] = alloc[1];
-       	alloc[2] = mem_alloc(sim_struct_size[0]);
-	heap_ptr[alloc[1]+1] = alloc[2];
-	heap_ptr[alloc[2]+1] = -3;
-      	alloc[7] = mem_alloc(sim_struct_size[1]);
-	heap_ptr[alloc[7]+1] = alloc[1];
-	alloc[3] = mem_alloc(sim_struct_size[1]);
-	alloc[8] = mem_alloc(sim_struct_size[0]);
-	heap_ptr[alloc[3]+1] = alloc[8];
-	heap_ptr[alloc[7]+2] = alloc[8];
-	alloc[9] = mem_alloc(sim_struct_size[0]);
-	heap_ptr[alloc[8]+1] = alloc[9];
-	alloc[10] = mem_alloc(sim_struct_size[0]);
-	heap_ptr[alloc[1]+2] = alloc[9];
-	heap_ptr[alloc[1]+3] = alloc[10];
-	heap_ptr[alloc[3]+2] = alloc[10];
-/*     	free_mem_alloc(c);
-      	int e = mem_alloc(1);
-       	free_mem_alloc(d);
-      	free_mem_alloc(e);
-       	free_mem_alloc(b);*/
-	display_heap_layout();
-return 0;
+	int adj_matrix[11][11];
+	for(int i=0;i<11;i++)
+	{
+		for(int j=0;j<11;j++)
+			adj_matrix[i][j] = 0;
+	}
+	// int root_set[4];
+	// int sim_struct_size[3] = {2,3,4};
+	// struct header* free_start = malloc(sizeof(struct header));
+	free_list_start = malloc(sizeof(struct header));
+	first_head = malloc(sizeof(struct header));
+	initialize_mem(heap_ptr_size, null, free_list_start);
+	first_head->h_ptr = heap_ptr;
+	first_head->next = NULL;
+	first_head->size = free_list_start->size;
+	struct allocs chunks[10];
+
+	for(int i=0;i<10;i++)
+	{
+		//chunks[i].tag=0;
+		chunks[i].ptr[0]=NULL;
+		chunks[i].ptr[1]=NULL;
+		chunks[i].ptr[3]=NULL;
+	}
+	char *root1 = mem_alloc(sizeof(struct allocs));
+	char *root2 = mem_alloc(sizeof(struct allocs));
+	*root1 = 5;
+	*root2 = 1;
+	char *two = mem_alloc(sizeof(struct allocs));
+	*two = 2;
+	
+	
+	char *nine = mem_alloc(sizeof(struct allocs));
+	*nine = 9;
+	
+
+	char* ten = mem_alloc(sizeof(struct allocs));
+	*ten = 10;
+	
+
+	char *eight = mem_alloc(sizeof(struct allocs));
+	*eight = 8;
+	
+
+	char *seven = mem_alloc(sizeof(struct allocs));
+	*seven = 7;
+
+	char *three = mem_alloc(sizeof(struct allocs));
+	*three = 3;
+	
+	chunks[5].ptr[0] = root2;
+	chunks[1].ptr[0] = two;
+	chunks[1].ptr[1] = nine;
+	chunks[1].ptr[2] = ten;
+	
+	chunks[8].ptr[0] = nine;
+	
+	chunks[7].ptr[0] = root2;
+	chunks[7].ptr[1] = eight;
+
+	chunks[3].ptr[0] = eight;
+	chunks[3].ptr[1] = ten;
+	two = nine = eight = seven = three = ten = NULL;
+
+	populate_matrix(adj_matrix,root2,chunks);
+	for(int i=0;i<11;i++)
+	{
+		for(int j=0;j<11;j++)
+		{
+			printf("%d,(%d,%d) |",adj_matrix[i][j],i,j);
+		}
+		printf("\n");
+	}
+	// printf("%d",adj_matrix[5][1]);
+	//gc_collect();
+	// struct header *temp_head = first_head;
+	// while (temp_head != NULL)
+	// {
+	// 	printf("size: %d\nptr: %d\nheap: %d\nalloc: %d\n\n", temp_head->size, temp_head->h_ptr, heap_ptr, temp_head->alloc);
+	// 	temp_head = temp_head->next;
+	// }
+	// printf("%d", free_list_start->h_ptr);
+	
+	return 0;
 }
