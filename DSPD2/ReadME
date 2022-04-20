@@ -1,0 +1,8 @@
+btree.c/btree.h contains the BTree functions.
+assgn2.c contains the assignment functions.
+
+FOR WINDOWS: 
+(mingw32-make) --> to generate executable.
+
+FOR LINUX:
+(make) --> to generate executable.
