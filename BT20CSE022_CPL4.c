@@ -201,7 +201,7 @@ void populate_matrix(int adj_matrix[][11],char *root,struct allocs chunks[])
 {
 	char i=*root;
 	int k=0;
-	while(chunks[i].ptr[k]!=NULL)
+	while(k<3 && chunks[i].ptr[k]!=NULL)
 	{
 		adj_matrix[i][*(chunks[i].ptr[k])] = 1;
 		populate_matrix(adj_matrix,chunks[i].ptr[k],chunks);
