@@ -775,8 +775,8 @@ struct trainer *Add_trainer(struct trainer *t_head, struct available_trainer_ptr
 					}
 					else
 					{
-						train_tail_ptr->next = t_ptr;
-						train_tail_ptr=t_ptr;
+						train_tail_ptr->next = t_ptr;				
+						train_tail_ptr=t_ptr; 						//<-------------------- INSERTED LINE!
 					}
 					add_trainer_slots(time_head,(*avail_t_head));
 				}
