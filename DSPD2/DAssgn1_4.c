@@ -365,7 +365,7 @@ void *mergesort(void *head, int flag, int flag2)
 int match_trainer_member_progs(char progs[], struct available_trainer_ptr *trainer)
 {
 	int i = 0, res = 1;
-	while ((i < 4) && (trainer->ptr->programs[i][0] != '\0') && strcmpi(trainer->ptr->programs[i], progs))
+	while ((i < 4) && (trainer->ptr->programs[i][0] != '\0') && strcasecmp(trainer->ptr->programs[i], progs))
 		i++;
 	if ((i == 4) || (trainer->ptr->programs[i][0] == '\0'))
 		i = -1;
@@ -422,10 +422,10 @@ void search_trainer(struct trainer *head)
 		{
 			char name[50];
 			printf("Enter name: \n");
-			gets(name);
+			fgets(name,sizeof(name),stdin);
 			while ((temp != NULL))
 			{
-				if (!strcmpi(temp->name, name))
+				if (!strcasecmp(temp->name, name))
 				{
 					struct trainer *temp_next = temp->next;
 					temp->next = NULL;
@@ -465,11 +465,11 @@ void search_trainer(struct trainer *head)
 		{
 			char program[15];
 			printf("Enter program:\n");
-			gets(program);
+			fgets(program,sizeof(program),stdin);
 			while ((temp != NULL))
 			{
 				int i = 0;
-				while ((i < 4) && (temp->programs[i][0] != '\0') && strcmpi(temp->programs[i], program))
+				while ((i < 4) && (temp->programs[i][0] != '\0') && strcasecmp(temp->programs[i], program))
 				{
 					i++;
 				}
@@ -505,10 +505,10 @@ void search_member(struct member *head)
 		{
 			char name[50];
 			printf("Enter name: \n");
-			gets(name);
+			fgets(name,sizeof(name),stdin);
 			while ((temp != NULL))
 			{
-				if (!strcmpi(temp->name, name))
+				if (!strcasecmp(temp->name, name))
 				{
 					struct member *temp_next = temp->next;
 					temp->next = NULL;
@@ -552,11 +552,11 @@ void search_member(struct member *head)
 		{
 			char program[15];
 			printf("Enter program:\n");
-			gets(program);
+			fgets(program,sizeof(program),stdin);
 			while ((temp != NULL))
 			{
 				int i = 0;
-				while ((i < 4) && (temp->enroll_prog[i][0] != '\0') && strcmpi(temp->enroll_prog[i], program))
+				while ((i < 4) && (temp->enroll_prog[i][0] != '\0') && strcasecmp(temp->enroll_prog[i], program))
 				{
 					i++;
 				}
@@ -580,10 +580,10 @@ void search_member(struct member *head)
 		{
 			printf("Enter gender!\n");
 			char gender[7];
-			gets(gender);
+			fgets(gender,sizeof(gender),stdin);
 			while (temp != NULL)
 			{
-				if (!strcmpi(temp->gender, gender))
+				if (!strcasecmp(temp->gender, gender))
 				{
 					struct member *temp_next = temp->next;
 					temp->next = NULL;
@@ -704,14 +704,14 @@ struct trainer *Add_trainer(struct trainer *t_head, struct available_trainer_ptr
 		printf("Enter Trainer name!:\n");
 		flag = 0;
 		int i = 0;
-		gets(name);
-		name_comp = strcmp(name, "x");
+		fgets(name,sizeof(name),stdin);
+		name_comp = strcasecmp(name, "x\n");
 
 		if (name_comp)
 		{
 			char prog_inp[15] = {0};
 			printf("\n---Enter list of activities of the trainer! (enter x when done!)---\n");
-			int comp = strcmp(prog_inp, "x");
+			int comp = strcasecmp(prog_inp, "x");
 
 			for (int i = 0; i < 4; i++)
 			{
@@ -722,8 +722,8 @@ struct trainer *Add_trainer(struct trainer *t_head, struct available_trainer_ptr
 			while (comp && (i < 4))
 			{
 				printf("Enter activity %d:\n", i + 1);
-				gets(prog_inp);
-				comp = strcmp(prog_inp, "x");
+				fgets(prog_inp,sizeof(prog_inp),stdin);
+				comp = strcasecmp(prog_inp, "x\n");
 				if (comp)
 				{
 					printf("Enter remuneration!:\n");
@@ -896,7 +896,7 @@ struct trainer *delete_trainer(struct trainer *head, struct available_trainer_pt
 struct member *Add_member(struct member *m_head)
 {
 	char name[50];
-
+	
 	int flag = 1;
 	struct member *inp_head = NULL, *tail;
 
@@ -905,8 +905,8 @@ struct member *Add_member(struct member *m_head)
 		printf("--------Enter Member details! (enter x when done)--------\n");
 		flag = 0;
 		printf("Enter Member Name: \n");
-		gets(name);
-		int comp = strcmp(name, "x");
+		fgets(name,sizeof(name),stdin);
+		int comp = strcasecmp(name, "x\n");
 		if (comp)
 		{
 			char enroll_progs[4][15];
@@ -923,17 +923,17 @@ struct member *Add_member(struct member *m_head)
 			getchar();
 			printf("Enter gender: ");
 			char gender[7];
-			gets(gender);
+			fgets(gender,sizeof(gender),stdin);
 
 			printf("\n\n------Enter Programs to enroll! (enter x when done)-----\n");
 			char enroll_inp[15] = {0};
 			int i = 0;
-			int comp = strcmp(enroll_inp, "x");
+			int comp = strcasecmp(enroll_inp, "x\n");
 			while (comp && (i < 4))
 			{
 				printf("Enter program %d: \n", i + 1);
-				gets(enroll_inp);
-				comp = strcmp(enroll_inp, "x");
+				fgets(enroll_inp,sizeof(enroll_inp),stdin);
+				comp = strcasecmp(enroll_inp, "x\n");
 				if (comp)
 				{
 					strcpy(enroll_progs[i], enroll_inp);
@@ -1113,9 +1113,9 @@ void schedule_slot(struct member *m_head, struct time *h_head, struct available_
 				}
 				char progs[15];
 				printf("Enter program to book slot!(only 1 accepted)\n");
-				gets(progs);
+				fgets(progs,sizeof(progs),stdin);
 				i = 0;
-				while ((i < 4) && (member_temp->enroll_prog[i][0] != '\0') && (strcmpi(member_temp->enroll_prog[i], progs)))
+				while ((i < 4) && (member_temp->enroll_prog[i][0] != '\0') && (strcasecmp(member_temp->enroll_prog[i], progs)))
 					i++;
 				if ((i == 4) || (member_temp->enroll_prog[i][0] == '\0'))
 				{
@@ -1349,7 +1349,7 @@ void print_hour_wise_list(struct time *time_head, struct available_trainer_ptr *
 			temp = available_head;
 			while(allot_node!=NULL)
 			{
-				if(allot_node->m_ptr!=NULL && !strcmpi(allot_node->m_ptr->booked_prog,progs[i]))
+				if(allot_node->m_ptr!=NULL && !strcasecmp(allot_node->m_ptr->booked_prog,progs[i]))
 				{
 
 					printf("Member ");
@@ -1369,11 +1369,70 @@ void print_hour_wise_list(struct time *time_head, struct available_trainer_ptr *
 	}
 
 }
+struct member* fetchMembers(struct member* m_head)
+{
+	FILE *f;
+	f = fopen("members.txt","r");
+	struct member* m = malloc(sizeof(struct member)),*tail;
+	while(fread(m,sizeof(struct member),1,f))
+	{
+		if(m_head==NULL)
+			m_head = m;
+		else
+			tail->next =m;
+		tail = m;
+		m=malloc(sizeof(struct member));
+	}
+	fclose(f);
+	return m_head;
+}
+struct trainer* fetchTrainers(struct trainer* t_head)
+{
+	FILE *f;
+	f = fopen("trainers.txt","r");
+	struct trainer* t = malloc(sizeof(struct trainer)),*tail;
+	while(fread(t,sizeof(struct trainer),1,f))
+	{
+		if(t_head==NULL)
+			t_head = t;
+		else
+			tail->next =t;
+		tail = t;
+		t=malloc(sizeof(struct trainer));
+	}
+	fclose(f);
+	return t_head;
+
+}
+void writeToMemberFile(struct member* m_head)
+{
+	FILE *f;
+	f = fopen("members.txt","w");
+	while(m_head!=NULL)
+	{
+		fwrite(m_head,sizeof(struct member),1,f);
+		m_head=m_head->next;
+	}
+	fclose(f);
+}
+void writeToTrainerFile(struct trainer* t_head)
+{
+	FILE *f;
+	f = fopen("trainerss.txt","w");
+	while(t_head!=NULL)
+	{
+		fwrite(t_head,sizeof(struct trainer),1,f);
+		t_head=t_head->next;
+	}
+	fclose(f);
+
+}
 int main()
 {
+
 	struct available_trainer_ptr *available_head = NULL,*temp;
-	struct member *m_head = NULL;
-	struct trainer *t_head = NULL;
+	struct member *m_head = fetchMembers(NULL);
+	struct trainer *t_head = fetchTrainers(NULL);
 	struct time *time_head = NULL;
 	int key = 1;
 	time_head = initialize_time(6, 20);
@@ -1384,7 +1443,10 @@ int main()
 		scanf("%d", &key);
 		getchar();
 		if (key == 1)
+		{
 			m_head = Add_member(m_head);
+			writeToMemberFile(m_head);
+		}
 		else if (key == 2)
 		{
 			if (m_head != NULL)
@@ -1397,7 +1459,7 @@ int main()
 		else if (key == 3)
 		{
 			t_head = Add_trainer(t_head, &available_head,time_head);
-			
+			writeToTrainerFile(t_head);
 		}
 		else if (key == 4)
 		{
