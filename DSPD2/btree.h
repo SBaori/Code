@@ -34,8 +34,9 @@ struct member
 	int alot, slot_hr, happy,tot_fees;
 };
 
-struct BTreeNode_trainer* trainer_root;
-struct BTreeNode_member* member_root;
+extern struct BTreeNode_trainer* trainer_root;
+extern struct BTreeNode_member* member_root;
+
 void *createNode(void* ptr, void *child,int flag);
 void addValToNode(void* ptr, int pos, void *node,void *child,int flag);
 void splitNode(void* ptr, void** pval, int pos, void *node,void *child, void **newNode,int flag);
@@ -50,4 +51,3 @@ void adjustNode(void *myNode, int pos,int flag);
 int delValFromNode(int id, void *myNode,int flag);
 void deletenode(int id, void *myNode,int flag);
 void* searching_tree(int id, int *pos, void *myNode,int flag);
-void traversal(void *myNode,int flag);
