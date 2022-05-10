@@ -145,7 +145,7 @@ void print_member_data(struct member *ptr)
 int match_trainer_member_progs(char progs[], struct available_trainer_ptr *trainer)
 {
 	int i = 0, res = 1;
-	while ((i < 4) && (trainer->ptr->programs[i][0] != '\0') && strcmpi(trainer->ptr->programs[i], progs))
+	while ((i < 4) && (trainer->ptr->programs[i][0] != '\0') && strcasecmp(trainer->ptr->programs[i], progs))
 		i++;
 	if ((i == 4) || (trainer->ptr->programs[i][0] == '\0'))
 		i = -1;
@@ -166,8 +166,8 @@ void Add_trainer(struct available_trainer_ptr** avail_t_head,struct time* time_h
 		printf("Enter Trainer name!:\n");
 		flag = 0;
 		int i = 0;
-		gets(name);
-		name_comp = strcmp(name, "x");
+		fgets(name,sizeof(name),stdin);
+		name_comp = strcmp(name, "x\n");
 
 		if (name_comp)
 		{
@@ -266,8 +266,8 @@ void Add_member()
 		printf("--------Enter Member details! (enter x when done)--------\n");
 		flag = 0;
 		printf("Enter Member Name: \n");
-		gets(name);
-		int comp = strcmp(name, "x");
+		fgets(name,sizeof(name),stdin);
+		int comp = strcmp(name, "x\n");
 		if (comp)
 		{
 			char enroll_progs[4][15];
@@ -285,7 +285,7 @@ void Add_member()
 			getchar();
 			printf("Enter gender: ");
 			char gender[7];
-			gets(gender);
+			fgets(gender,sizeof(gender),stdin);
 
 			printf("\n\n------Enter Programs to enroll! (enter 0 when done)-----\n");
 			int enroll_inp=1;
@@ -504,7 +504,7 @@ void search_trainer_helper(int id, char char_field[], struct BTreeNode_trainer *
 		{
 			for (int j = 1; j <= r_trainer->count; j++)
 			{
-				if (!strcmpi(char_field, r_trainer->ptrs[j]->name))
+				if (!strcasecmp(char_field, r_trainer->ptrs[j]->name))
 					print_trainer_data(r_trainer->ptrs[j]);
 			}
 			for (int i = 0; i <= r_trainer->count; i++)
@@ -519,7 +519,7 @@ void search_trainer_helper(int id, char char_field[], struct BTreeNode_trainer *
 			{
 				for (int k = 0; k < 4; k++)
 				{
-					if (!strcmpi(char_field, r_trainer->ptrs[j]->programs[k]))
+					if (!strcasecmp(char_field, r_trainer->ptrs[j]->programs[k]))
 					{
 						print_trainer_data(r_trainer->ptrs[j]);
 						k=4;
@@ -547,7 +547,7 @@ void search_trainer()
 		{
 			char name[50];
 			printf("Enter name: \n");
-			gets(name);
+			fgets(name,sizeof(name),stdin);
 			search_trainer_helper(0,name,trainer_root,num);
 		}
 		else if (num == 2)
@@ -565,7 +565,7 @@ void search_trainer()
 		{
 			char program[15];
 			printf("Enter program:\n");
-			gets(program);
+			fgets(program,sizeof(program),stdin);
 			search_trainer_helper(0,program,trainer_root,num);
 		}
 	}
@@ -578,7 +578,7 @@ void search_member_helper(int id,char char_field[],struct BTreeNode_member* r_me
 		{
 			for (int j = 1; j <= r_member->count; j++)
 			{
-				if (!strcmpi(char_field, r_member->ptrs[j]->name))
+				if (!strcasecmp(char_field, r_member->ptrs[j]->name))
 					print_member_data(r_member->ptrs[j]);
 			}
 			for (int i = 0; i <= r_member->count; i++)
@@ -593,7 +593,7 @@ void search_member_helper(int id,char char_field[],struct BTreeNode_member* r_me
 			{
 				for (int k = 0; k < 4; k++)
 				{
-					if (!strcmpi(char_field, r_member->ptrs[j]->enroll_prog[k]))
+					if (!strcasecmp(char_field, r_member->ptrs[j]->enroll_prog[k]))
 						print_member_data(r_member->ptrs[j]);
 				}
 			}
@@ -607,7 +607,7 @@ void search_member_helper(int id,char char_field[],struct BTreeNode_member* r_me
 		{
 			for (int j = 1; j <= r_member->count; j++)
 			{
-				if (!strcmpi(char_field, r_member->ptrs[j]->gender))
+				if (!strcasecmp(char_field, r_member->ptrs[j]->gender))
 					print_member_data(r_member->ptrs[j]);
 			}
 			for (int i = 0; i <= r_member->count; i++)
@@ -655,7 +655,7 @@ void search_member()
 		{
 			char name[50];
 			printf("Enter name: \n");
-			gets(name);
+			fgets(name,sizeof(name),stdin);
 			search_member_helper(0,name,member_root,num);
 		}
 		else if (num == 2)
@@ -673,14 +673,14 @@ void search_member()
 		{
 			char program[15];
 			printf("Enter program:\n");
-			gets(program);
+			fgets(program,sizeof(program),stdin);
 			search_member_helper(0,program,member_root,num);
 		}
 		else if (num == 4)
 		{
 			printf("Enter gender!\n");
 			char gender[7];
-			gets(gender);
+			fgets(gender,sizeof(gender),stdin);
 			search_member_helper(0,gender,member_root,num);
 		}
 		else if (num == 5)
@@ -840,9 +840,9 @@ void schedule_slot(struct time *h_head, struct available_trainer_ptr *available_
 				}
 				char progs[15];
 				printf("Enter program to book slot!(only 1 accepted)\n");
-				gets(progs);
+				fgets(progs,sizeof(progs),stdin);
 				i = 0;
-				while ((i < 4) && (member_temp->enroll_prog[i][0] != '\0') && (strcmpi(member_temp->enroll_prog[i], progs)))
+				while ((i < 4) && (member_temp->enroll_prog[i][0] != '\0') && (strcasecmp(member_temp->enroll_prog[i], progs)))
 					i++;
 				if ((i == 4) || (member_temp->enroll_prog[i][0] == '\0'))
 				{
@@ -1067,7 +1067,7 @@ void print_hour_wise_list(struct time *time_head, struct available_trainer_ptr *
 			temp = available_head;
 			while(allot_node!=NULL)
 			{
-				if(allot_node->m_ptr!=NULL && !strcmpi(allot_node->m_ptr->booked_prog,progs[i]))
+				if(allot_node->m_ptr!=NULL && !strcasecmp(allot_node->m_ptr->booked_prog,progs[i]))
 				{
 
 					printf("Member ");
@@ -1087,12 +1087,82 @@ void print_hour_wise_list(struct time *time_head, struct available_trainer_ptr *
 	}
 
 }
+void fetchTrainers()
+{
+	FILE *f;
+	f = fopen("trainers.txt","r");
+	struct trainer* t = malloc(sizeof(struct trainer));
+
+	while(fread(t,sizeof(struct trainer),1,f))
+	{
+		insertion(t,1);
+		t = malloc(sizeof(struct trainer));
+	}
+
+	fclose(f);
+}
+void fetchMembers()
+{
+	FILE *f;
+	f = fopen("members.txt","r");
+
+	struct member* m = malloc(sizeof(struct member));
+	while(fread(m,sizeof(struct member),1,f))
+	{
+		insertion(m,0);
+		m = malloc(sizeof(struct member));
+	}
+
+	fclose(f);
+}
+void traversal(void *myNode,int flag,FILE **f) {
+   if(flag)
+   {
+     int i;
+     if (myNode) {
+       for (i = 0; i < ((struct BTreeNode_trainer*)myNode)->count; i++) {
+         traversal(((struct BTreeNode_trainer*)myNode)->linker[i],flag,f);
+        fwrite(myNode,sizeof(struct BTreeNode_trainer),1,*f);
+       }
+       traversal(((struct BTreeNode_trainer*)myNode)->linker[i],flag,f);
+     }
+   }
+   else
+   {
+     int i;
+     if (myNode) {
+       for (i = 0; i < ((struct BTreeNode_member*)myNode)->count; i++) {
+         traversal(((struct BTreeNode_member*)myNode)->linker[i],flag,f);
+	fwrite(myNode,sizeof(struct BTreeNode_member),1,*f);
+       }
+       traversal(((struct BTreeNode_member*)myNode)->linker[i],flag,f);
+     }
+   }
+ }
+
+void writeToTrainerFile()
+{
+	FILE *f;
+	f = fopen("trainers.txt","w");
+	traversal(trainer_root,1,&f);
+
+	fclose(f);
+}
+void writeToMemberFile()
+{
+	FILE *f;
+	f = fopen("members.txt","w");
+	traversal(member_root,0,&f);
+	fclose(f);
+}
 int main()
 {
 	int key = 1;
 	struct time *time_head = NULL;
 	struct available_trainer_ptr *available_head = NULL,*temp;
 	time_head = initialize_time(6, 20);
+	fetchTrainers();
+	fetchMembers();
 	printf("\nEnter the key for the corresponding operations!\n");
 	while (key)
 	{
@@ -1100,11 +1170,17 @@ int main()
 		scanf("%d", &key);
 		getchar();
 		if (key == 1)
+		{
 			Add_member();
+			writeToMemberFile();
+		}
 		else if (key == 2)
 		{
 			if (member_root != NULL)
+			{
 				delete_member(time_head,available_head);
+				writeToMemberFile();
+			}
 			else
 				printf("No members present!\n");
 		}
@@ -1112,11 +1188,15 @@ int main()
 		else if (key == 3)
 		{
 			Add_trainer(&available_head,time_head);
+			writeToTrainerFile();
 		}
 		else if (key == 4)
 		{
 			if (trainer_root != NULL)
+			{
 				delete_trainer(time_head,&available_head);
+				writeToTrainerFile();
+			}
 			else
 				printf("No trainers present!\n");
 		}
