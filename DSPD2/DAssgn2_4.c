@@ -1115,16 +1115,16 @@ void fetchMembers()
 
 	fclose(f);
 }
-void traversal(void *myNode,int flag,FILE **f) {
+void writeHelper(void *myNode,int flag,FILE **f) {
    if(flag)
    {
      int i;
      if (myNode) {
        for (i = 0; i < ((struct BTreeNode_trainer*)myNode)->count; i++) {
-         traversal(((struct BTreeNode_trainer*)myNode)->linker[i],flag,f);
-        fwrite(myNode,sizeof(struct BTreeNode_trainer),1,*f);
+         writeHelper(((struct BTreeNode_trainer*)myNode)->linker[i],flag,f);
+        fwrite(((struct BTreeNode_trainer*)myNode)->ptrs[i+1],sizeof(struct trainer),1,*f);
        }
-       traversal(((struct BTreeNode_trainer*)myNode)->linker[i],flag,f);
+       writeHelper(((struct BTreeNode_trainer*)myNode)->linker[i],flag,f);
      }
    }
    else
@@ -1132,10 +1132,10 @@ void traversal(void *myNode,int flag,FILE **f) {
      int i;
      if (myNode) {
        for (i = 0; i < ((struct BTreeNode_member*)myNode)->count; i++) {
-         traversal(((struct BTreeNode_member*)myNode)->linker[i],flag,f);
-	fwrite(myNode,sizeof(struct BTreeNode_member),1,*f);
+         writeHelper(((struct BTreeNode_member*)myNode)->linker[i],flag,f);
+	fwrite(((struct BTreeNode_member*)myNode)->ptrs[i+1],sizeof(struct member),1,*f);
        }
-       traversal(((struct BTreeNode_member*)myNode)->linker[i],flag,f);
+       writeHelper(((struct BTreeNode_member*)myNode)->linker[i],flag,f);
      }
    }
  }
@@ -1144,7 +1144,7 @@ void writeToTrainerFile()
 {
 	FILE *f;
 	f = fopen("trainers.txt","w");
-	traversal(trainer_root,1,&f);
+	writeHelper(trainer_root,1,&f);
 
 	fclose(f);
 }
@@ -1152,7 +1152,7 @@ void writeToMemberFile()
 {
 	FILE *f;
 	f = fopen("members.txt","w");
-	traversal(member_root,0,&f);
+	writeHelper(member_root,0,&f);
 	fclose(f);
 }
 int main()
